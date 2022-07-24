@@ -7,17 +7,24 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.contextualcards.databinding.ItemCardLayoutBinding
 import com.example.contextualcards.model.CardGroup
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
+import timber.log.Timber
+import java.lang.reflect.Type
 
 /**
  * @Author: Karan Verma
  * @Date: 23/07/22
  */
-class CardsAdapter(private val sp :SharedPreferences) : RecyclerView.Adapter<CardsAdapter.CardsViewHolder>() {
+class CardsAdapter(private val sp: SharedPreferences) :
+    RecyclerView.Adapter<CardsAdapter.CardsViewHolder>() {
 
-    private var cardGroupsList : ArrayList<CardGroup> = arrayListOf()
-    private val viewPool = RecyclerView.RecycledViewPool()
+    private var cardGroupsList: ArrayList<CardGroup> = arrayListOf()
+    private var hc3CardPos: Int = -1
 
-    fun setCardGroups(cardGroupsList : ArrayList<CardGroup>){
+    private var dismissList: ArrayList<Int> = arrayListOf()
+
+    fun setCardGroups(cardGroupsList: ArrayList<CardGroup>) {
         this.cardGroupsList = cardGroupsList
         notifyDataSetChanged()
     }
@@ -28,6 +35,21 @@ class CardsAdapter(private val sp :SharedPreferences) : RecyclerView.Adapter<Car
         )
 
     override fun onBindViewHolder(holder: CardsViewHolder, position: Int) {
+
+        if (cardGroupsList[position].design_type == "HC3") {
+            val type: Type = object : TypeToken<ArrayList<Int?>?>() {}.type
+            val json: String? = sp.getString(ContextualCardsAdapter.DISMISS, null)
+            if (!json.isNullOrEmpty())
+                dismissList = Gson().fromJson(json, type);
+
+            dismissList.forEach { cardGroupsList[position].cards.removeAt(it) }
+
+            if (cardGroupsList[position].cards.isNullOrEmpty()) {
+                cardGroupsList.removeAt(position)
+                hc3CardPos = holder.adapterPosition
+            }
+        }
+
         val childLayoutManager =
             LinearLayoutManager(
                 holder.binding.contextualCardsRecycler.context,
@@ -35,9 +57,13 @@ class CardsAdapter(private val sp :SharedPreferences) : RecyclerView.Adapter<Car
                 false
             )
 
-        holder.binding.contextualCardsRecycler.apply {
-            layoutManager = childLayoutManager
-            adapter = ContextualCardsAdapter(sp, cardGroupsList, position)
+        if (hc3CardPos != position) {
+            Timber.d(position.toString())
+            holder.binding.contextualCardsRecycler.apply {
+                layoutManager = childLayoutManager
+                adapter = ContextualCardsAdapter(sp, cardGroupsList, position, dismissList)
+
+            }
         }
     }
 

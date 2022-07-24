@@ -21,11 +21,10 @@ import java.lang.reflect.Type
 class ContextualCardsAdapter(
     private val sp: SharedPreferences,
     private val cardGroupsList: ArrayList<CardGroup>,
-    private val groupPosition: Int
+    private val groupPosition: Int,
+    private val dismissList: ArrayList<Int>
 ) :
     RecyclerView.Adapter<RecyclerView.ViewHolder>() {
-
-    private var dismissList: ArrayList<Int> = arrayListOf()
 
     override fun getItemViewType(position: Int): Int {
         Timber.d(cardGroupsList[groupPosition].design_type)
@@ -125,11 +124,6 @@ class ContextualCardsAdapter(
                     notifyItemRemoved(position)
                 }
 
-                val type: Type = object : TypeToken<ArrayList<Int?>?>() {}.type
-                val json: String? = sp.getString(DISMISS, null)
-                if (!json.isNullOrEmpty())
-                    dismissList = Gson().fromJson(json, type);
-
                 holder.binding.dismissBtn.setOnClickListener {
                     cardGroupsList[groupPosition].cards.removeAt(position)
                     notifyItemRemoved(position)
@@ -138,7 +132,8 @@ class ContextualCardsAdapter(
 
                     sp.edit().putString(DISMISS, Gson().toJson(dismissList)).apply()
                 }
-                holder.bind(cardGroupsList, position, groupPosition, dismissList)
+
+                holder.bind(cardGroupsList, position, groupPosition)
             }
             is ViewholderHC5 -> {
                 Timber.d("HC5 hit")
@@ -146,6 +141,7 @@ class ContextualCardsAdapter(
             }
             is ViewholderHC6 -> {
                 Timber.d("HC6 hit")
+                Timber.d("HC6 $position ${cardGroupsList[groupPosition].cards.size}")
                 holder.bind(cardGroupsList, position, groupPosition)
             }
             is ViewholderHC9 -> {
@@ -155,7 +151,16 @@ class ContextualCardsAdapter(
         }
     }
 
-    override fun getItemCount(): Int = cardGroupsList[groupPosition].cards.size
+    override fun getItemCount(): Int {
+        return when {
+            cardGroupsList[groupPosition].cards.isNullOrEmpty() -> {
+                Timber.d("hc3 zero hit")
+                0
+            }
+            cardGroupsList[groupPosition].is_scrollable -> cardGroupsList[groupPosition].cards.size
+            else -> 1
+        }
+    }
 
     companion object {
         const val DISMISS = "DISMISS"

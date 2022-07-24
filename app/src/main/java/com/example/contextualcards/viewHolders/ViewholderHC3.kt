@@ -1,8 +1,9 @@
 package com.example.contextualcards.viewHolders
 
 import android.animation.ObjectAnimator
-import android.content.SharedPreferences
+import android.content.Intent
 import android.graphics.Color
+import android.net.Uri
 import android.view.View
 import android.view.animation.DecelerateInterpolator
 import androidx.recyclerview.widget.RecyclerView
@@ -21,32 +22,57 @@ class ViewholderHC3(var binding: ItemHc3LayoutBinding) : RecyclerView.ViewHolder
     fun bind(
         cardGroupsList: ArrayList<CardGroup>,
         position: Int,
-        groupPosition: Int,
-        dismissList: ArrayList<Int>
+        groupPosition: Int
     ) {
-        val cards = cardGroupsList[groupPosition].cards
 
-        dismissList.forEach {
-            cards.removeAt(it)
-        }
-        Timber.d("HC3 cards ${cards.toString()}")
+        Timber.d("HC3 cards ${cardGroupsList[groupPosition].cards}")
+        if (!cardGroupsList[groupPosition].cards.isNullOrEmpty()) {
+            if (!cardGroupsList[groupPosition].cards[position].bg_color.isNullOrEmpty())
+                binding.layout.setBackgroundColor(Color.parseColor(cardGroupsList[groupPosition].cards[position].bg_color))
 
-        if (!cards.isNullOrEmpty()) {
-            if (!cards[position].bg_color.isNullOrEmpty())
-                binding.layout.setBackgroundColor(Color.parseColor(cards[position].bg_color))
-
-            if (!cards[position].bg_image?.image_url.isNullOrEmpty())
-                Glide.with(binding.root).load(cards[position].bg_image?.image_url)
+            if (!cardGroupsList[groupPosition].cards[position].bg_image?.image_url.isNullOrEmpty())
+                Glide.with(binding.root)
+                    .load(cardGroupsList[groupPosition].cards[position].bg_image?.image_url)
                     .into(binding.image)
 
-            binding.title.text = cards[position].formatted_title?.text
-            binding.desc.text = cards[position].formatted_description?.text
+            binding.title.text =
+                cardGroupsList[groupPosition].cards[position].formatted_title?.text
+            binding.desc.text =
+                cardGroupsList[groupPosition].cards[position].formatted_description?.text
 
-            binding.btn.text = cards[position].cta?.get(0)?.text
-            binding.btn.setTextColor(Color.parseColor(cards[position].cta?.get(0)?.text_color))
-            binding.btn.setBackgroundColor(Color.parseColor(cards[position].cta?.get(0)?.bg_color))
-            binding.btn.setOnClickListener {
+            binding.btn.text = cardGroupsList[groupPosition].cards[position].cta?.get(0)?.text
+            binding.btn.setTextColor(
+                Color.parseColor(
+                    cardGroupsList[groupPosition].cards[position].cta?.get(
+                        0
+                    )?.text_color
+                )
+            )
+            binding.btn.setBackgroundColor(
+                Color.parseColor(
+                    cardGroupsList[groupPosition].cards[position].cta?.get(
+                        0
+                    )?.bg_color
+                )
+            )
+
+            if (!cardGroupsList[groupPosition].cards[position].cta?.get(0)?.url.isNullOrEmpty()) {
+                binding.btn.setOnClickListener {
+                    val intent = Intent(Intent.ACTION_VIEW)
+                    intent.data =
+                        Uri.parse(cardGroupsList[groupPosition].cards[position].cta?.get(0)?.url)
+                    binding.btn.context.startActivity(intent)
+                }
             }
+
+            if (!cardGroupsList[groupPosition].cards[position].url.isNullOrEmpty()) {
+                binding.layout.setOnClickListener {
+                    val intent = Intent(Intent.ACTION_VIEW)
+                    intent.data = Uri.parse(cardGroupsList[groupPosition].cards[position].url)
+                    binding.root.context.startActivity(intent)
+                }
+            }
+
             binding.layout.setOnLongClickListener(this)
         }
     }

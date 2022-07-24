@@ -1,6 +1,8 @@
 package com.example.contextualcards.viewHolders
 
+import android.content.Intent
 import android.graphics.Color
+import android.net.Uri
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.contextualcards.databinding.ItemHc1LayoutBinding
@@ -21,5 +23,13 @@ class ViewholderHC1(val binding: ItemHc1LayoutBinding) : RecyclerView.ViewHolder
         Glide.with(binding.iconImage)
             .load(cardGroupsList[groupPosition].cards[position].icon?.image_url)
             .into(binding.iconImage)
+
+        if (!cardGroupsList[groupPosition].cards[position].url.isNullOrEmpty()) {
+            binding.card.setOnClickListener {
+                val intent = Intent(Intent.ACTION_VIEW)
+                intent.data = Uri.parse(cardGroupsList[groupPosition].cards[position].url)
+                binding.root.context.startActivity(intent)
+            }
+        }
     }
 }
