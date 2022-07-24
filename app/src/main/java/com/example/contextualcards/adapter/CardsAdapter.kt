@@ -1,5 +1,6 @@
 package com.example.contextualcards.adapter
 
+import android.content.SharedPreferences
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -11,7 +12,7 @@ import com.example.contextualcards.model.CardGroup
  * @Author: Karan Verma
  * @Date: 23/07/22
  */
-class CardsAdapter : RecyclerView.Adapter<CardsAdapter.CardsViewHolder>() {
+class CardsAdapter(private val sp :SharedPreferences) : RecyclerView.Adapter<CardsAdapter.CardsViewHolder>() {
 
     private var cardGroupsList : ArrayList<CardGroup> = arrayListOf()
     private val viewPool = RecyclerView.RecycledViewPool()
@@ -36,7 +37,7 @@ class CardsAdapter : RecyclerView.Adapter<CardsAdapter.CardsViewHolder>() {
 
         holder.binding.contextualCardsRecycler.apply {
             layoutManager = childLayoutManager
-            adapter = ContextualCardsAdapter(cardGroupsList, position)
+            adapter = ContextualCardsAdapter(sp, cardGroupsList, position)
         }
     }
 

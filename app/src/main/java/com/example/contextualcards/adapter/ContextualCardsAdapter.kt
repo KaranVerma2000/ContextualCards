@@ -1,5 +1,6 @@
 package com.example.contextualcards.adapter
 
+import android.content.SharedPreferences
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
@@ -7,17 +8,24 @@ import com.example.contextualcards.databinding.*
 import com.example.contextualcards.model.CardGroup
 import com.example.contextualcards.model.CardsType
 import com.example.contextualcards.viewHolders.*
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import timber.log.Timber
+import java.lang.reflect.Type
+
 
 /**
  * @Author: Karan Verma
  * @Date: 23/07/22
  */
 class ContextualCardsAdapter(
+    private val sp: SharedPreferences,
     private val cardGroupsList: ArrayList<CardGroup>,
     private val groupPosition: Int
 ) :
     RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+
+    private var dismissList: ArrayList<Int> = arrayListOf()
 
     override fun getItemViewType(position: Int): Int {
         Timber.d(cardGroupsList[groupPosition].design_type)
@@ -111,7 +119,26 @@ class ContextualCardsAdapter(
             }
             is ViewholderHC3 -> {
                 Timber.d("HC3 hit")
-                holder.bind(cardGroupsList, position, groupPosition)
+
+                holder.binding.remindLaterBtn.setOnClickListener {
+                    cardGroupsList[groupPosition].cards.removeAt(position)
+                    notifyItemRemoved(position)
+                }
+
+                val type: Type = object : TypeToken<ArrayList<Int?>?>() {}.type
+                val json: String? = sp.getString(DISMISS, null)
+                if (!json.isNullOrEmpty())
+                    dismissList = Gson().fromJson(json, type);
+
+                holder.binding.dismissBtn.setOnClickListener {
+                    cardGroupsList[groupPosition].cards.removeAt(position)
+                    notifyItemRemoved(position)
+
+                    dismissList.add(position)
+
+                    sp.edit().putString(DISMISS, Gson().toJson(dismissList)).apply()
+                }
+                holder.bind(cardGroupsList, position, groupPosition, dismissList)
             }
             is ViewholderHC5 -> {
                 Timber.d("HC5 hit")
@@ -129,4 +156,8 @@ class ContextualCardsAdapter(
     }
 
     override fun getItemCount(): Int = cardGroupsList[groupPosition].cards.size
+
+    companion object {
+        const val DISMISS = "DISMISS"
+    }
 }

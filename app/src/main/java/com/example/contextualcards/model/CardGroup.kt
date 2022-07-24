@@ -2,7 +2,7 @@ package com.example.contextualcards.model
 
 data class CardGroup(
     val card_type: Int,
-    val cards: List<Card>,
+    val cards: ArrayList<Card>,
     val design_type: String,
     val height: Int,
     val id: Int,

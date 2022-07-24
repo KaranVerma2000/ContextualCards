@@ -1,10 +1,13 @@
 package com.example.contextualcards.activity
 
+import android.content.Context
+import android.content.SharedPreferences
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Toast
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.contextualcards.R
 import com.example.contextualcards.adapter.CardsAdapter
 import com.example.contextualcards.databinding.ActivityMainBinding
 import com.example.contextualcards.model.CardGroup
@@ -26,7 +29,12 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         viewModel = ViewModelProvider(this)[CardsViewModel::class.java]
-        cardAdapter = CardsAdapter()
+        val sharedPreferences: SharedPreferences = getSharedPreferences(
+            getString(
+                R.string.app_name
+            ), Context.MODE_PRIVATE
+        )
+        cardAdapter = CardsAdapter(sharedPreferences)
         binding.cardRecycler.apply {
             layoutManager = LinearLayoutManager(this@MainActivity)
             adapter = cardAdapter
