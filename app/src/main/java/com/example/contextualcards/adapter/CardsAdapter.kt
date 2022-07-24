@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.contextualcards.adapter.ContextualCardsAdapter.Companion.ID
 import com.example.contextualcards.databinding.ItemCardLayoutBinding
 import com.example.contextualcards.model.CardGroup
 import com.google.gson.Gson
@@ -22,7 +23,7 @@ class CardsAdapter(private val sp: SharedPreferences) :
     private var cardGroupsList: ArrayList<CardGroup> = arrayListOf()
     private var hc3CardPos: Int = -1
 
-    private var dismissList: ArrayList<Int> = arrayListOf()
+    var dismissListMap: HashMap<Int, ArrayList<Int>> = HashMap()
 
     fun setCardGroups(cardGroupsList: ArrayList<CardGroup>) {
         this.cardGroupsList = cardGroupsList
@@ -35,14 +36,22 @@ class CardsAdapter(private val sp: SharedPreferences) :
         )
 
     override fun onBindViewHolder(holder: CardsViewHolder, position: Int) {
+        val storedId = sp.getInt(ID, -1)
+        if (cardGroupsList[position].design_type == "HC3" && storedId == cardGroupsList[position].id) {
 
-        if (cardGroupsList[position].design_type == "HC3") {
-            val type: Type = object : TypeToken<ArrayList<Int?>?>() {}.type
+            val type: Type = object : TypeToken<HashMap<Int, ArrayList<Int>>?>() {}.type
             val json: String? = sp.getString(ContextualCardsAdapter.DISMISS, null)
             if (!json.isNullOrEmpty())
-                dismissList = Gson().fromJson(json, type);
+                dismissListMap = Gson().fromJson(json, type);
 
-            dismissList.forEach { cardGroupsList[position].cards.removeAt(it) }
+            Timber.d("DismissMap $dismissListMap")
+
+            dismissListMap.forEach {
+                if (it.key == storedId)
+                    it.value.forEach { pos ->
+                        cardGroupsList[position].cards.removeAt(pos)
+                    }
+            }
 
             if (cardGroupsList[position].cards.isNullOrEmpty()) {
                 cardGroupsList.removeAt(position)
@@ -61,7 +70,7 @@ class CardsAdapter(private val sp: SharedPreferences) :
             Timber.d(position.toString())
             holder.binding.contextualCardsRecycler.apply {
                 layoutManager = childLayoutManager
-                adapter = ContextualCardsAdapter(sp, cardGroupsList, position, dismissList)
+                adapter = ContextualCardsAdapter(sp, cardGroupsList, position, dismissListMap)
 
             }
         }

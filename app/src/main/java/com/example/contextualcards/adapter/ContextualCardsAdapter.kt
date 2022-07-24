@@ -9,9 +9,7 @@ import com.example.contextualcards.model.CardGroup
 import com.example.contextualcards.model.CardsType
 import com.example.contextualcards.viewHolders.*
 import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import timber.log.Timber
-import java.lang.reflect.Type
 
 
 /**
@@ -22,9 +20,11 @@ class ContextualCardsAdapter(
     private val sp: SharedPreferences,
     private val cardGroupsList: ArrayList<CardGroup>,
     private val groupPosition: Int,
-    private val dismissList: ArrayList<Int>
+    private val dismissListMap: HashMap<Int, ArrayList<Int>>
 ) :
     RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+
+    private var dismissList: ArrayList<Int>? = arrayListOf()
 
     override fun getItemViewType(position: Int): Int {
         Timber.d(cardGroupsList[groupPosition].design_type)
@@ -128,9 +128,20 @@ class ContextualCardsAdapter(
                     cardGroupsList[groupPosition].cards.removeAt(position)
                     notifyItemRemoved(position)
 
-                    dismissList.add(position)
+                    if (!dismissListMap[cardGroupsList[groupPosition].id].isNullOrEmpty())
+                        dismissList = dismissListMap[cardGroupsList[groupPosition].id]
+                    dismissList?.add(position)
+                    Timber.d("Dismisslist $dismissList")
 
-                    sp.edit().putString(DISMISS, Gson().toJson(dismissList)).apply()
+                    dismissList?.let { it ->
+                        dismissListMap.put(
+                            cardGroupsList[groupPosition].id,
+                            it
+                        )
+                    }
+
+                    sp.edit().putInt(ID, cardGroupsList[groupPosition].id).apply()
+                    sp.edit().putString(DISMISS, Gson().toJson(dismissListMap)).apply()
                 }
 
                 holder.bind(cardGroupsList, position, groupPosition)
@@ -164,5 +175,6 @@ class ContextualCardsAdapter(
 
     companion object {
         const val DISMISS = "DISMISS"
+        const val ID = "ID"
     }
 }
