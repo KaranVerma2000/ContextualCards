@@ -19,13 +19,14 @@ import timber.log.Timber
  */
 class ViewholderHC3(var binding: ItemHc3LayoutBinding) : RecyclerView.ViewHolder(binding.root),
     View.OnLongClickListener {
+
+    private var cardClicked: Boolean = false
+
     fun bind(
         cardGroupsList: ArrayList<CardGroup>,
         position: Int,
         groupPosition: Int
     ) {
-
-        Timber.d("HC3 cards ${cardGroupsList[groupPosition].cards}")
         if (!cardGroupsList[groupPosition].cards.isNullOrEmpty()) {
             if (!cardGroupsList[groupPosition].cards[position].bg_color.isNullOrEmpty())
                 binding.layout.setBackgroundColor(Color.parseColor(cardGroupsList[groupPosition].cards[position].bg_color))
@@ -78,12 +79,22 @@ class ViewholderHC3(var binding: ItemHc3LayoutBinding) : RecyclerView.ViewHolder
     }
 
     override fun onLongClick(p0: View?): Boolean {
-        Timber.d("Long hit")
-        val oa1 = (p0?.width)?.times((0.4))?.toFloat()
-            ?.let { ObjectAnimator.ofFloat(p0, "translationX", 0f, it) }
-        oa1?.interpolator = DecelerateInterpolator()
-        oa1?.duration = 100
-        oa1?.start()
-        return true
+        return if (cardClicked) {
+            cardClicked = !cardClicked
+            val oa1 = (p0?.width)?.toFloat()
+                ?.let { ObjectAnimator.ofFloat(p0, "translationX", it, 0f) }
+            oa1?.interpolator = DecelerateInterpolator()
+            oa1?.duration = 100
+            oa1?.start()
+            true
+        } else {
+            cardClicked = !cardClicked
+            val oa1 = (p0?.width)?.times((0.4))?.toFloat()
+                ?.let { ObjectAnimator.ofFloat(p0, "translationX", 0f, it) }
+            oa1?.interpolator = DecelerateInterpolator()
+            oa1?.duration = 100
+            oa1?.start()
+            true
+        }
     }
 }
